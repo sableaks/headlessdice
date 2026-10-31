@@ -1,0 +1,19 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>HEADLESS TP · Admin</title><link rel="stylesheet" href="/brand.css"></head>
+<body class="htp"><main class="box wide"><div class="logo">HEADLESS <span>TP</span> ADMIN</div>
+<a class="btn" href="/" style="align-self:flex-start">← Home</a>
+<select id="type"><option value="access">Access key (dice guesser)</option><option value="admin">Admin key (can generate keys, owner only)</option></select>
+<select id="product"><option value="online">Online Dice</option><option value="offline">Offline Dice</option></select>
+<select id="dur"><option value="life">Lifetime</option><option value="1d">1 Day</option><option value="1w">1 Week</option><option value="1m">1 Month</option><option value="5h">5 Hours</option><option value="1h">1 Hour</option><option value="30m">30 Minutes</option></select>
+<input id="count" type="number" min="1" max="25" value="1" aria-label="How many keys">
+<button class="b" id="gen">Generate</button><textarea id="out" readonly rows="3" style="width:100%;border-radius:10px;padding:10px;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18)" placeholder="New keys appear here (shown once, store them)"></textarea>
+<p class="mut" id="msg"></p><div style="overflow-x:auto"><table><thead><tr><th>Key</th><th>Type</th><th>Product</th><th>Time</th><th>Status</th><th></th></tr></thead><tbody id="rows"></tbody></table></div></main>
+<script>
+const $=id=>document.getElementById(id),post=(u,b)=>fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
+$('type').onchange=()=>$('product').disabled=$('type').value==='admin';
+async function load(){const ks=await(await fetch('/api/admin/keys')).json(),t=$('rows');t.textContent='';
+ ks.forEach(k=>{const tr=t.insertRow();[ '…'+k.hint,k.type,k.product||'-',k.dur,k.revoked?'revoked':k.used?'used by '+k.used:'unused'].forEach(x=>tr.insertCell().textContent=x);
+  if(!k.used&&!k.revoked){const b=document.createElement('button');b.className='b ghost';b.textContent='Revoke';b.onclick=async()=>{await post('/api/admin/revoke',{id:k.id});load()};tr.insertCell().append(b)}else tr.insertCell()})}
+$('gen').onclick=async()=>{const r=await post('/api/admin/gen',{type:$('type').value,product:$('product').value,dur:$('dur').value,count:+$('count').value});
+ $('msg').textContent=r.error||'Done';if(r.keys)$('out').value=r.keys.join('\n');load()};
+load();
+</script></body></html>

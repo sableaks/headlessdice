@@ -1,0 +1,21 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>HEADLESS TP</title><link rel="stylesheet" href="/brand.css"></head>
+<body class="htp"><main class="box"><div class="logo">HEADLESS <span>TP</span></div><div id="v" class="box" style="padding:0;border:0;background:none;box-shadow:none"><p class="mut">Loading…</p></div>
+<a class="dc" href="https://discord.gg/headlesstp" target="_blank" rel="noopener">Join our Discord</a>
+<p class="mut" style="text-align:center">For entertainment only. No tool here predicts rolls or guarantees wins. 18+.</p></main>
+<script>
+const $=id=>document.getElementById(id),el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const post=(u,b)=>fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})}).then(r=>r.json());
+const left=x=>x===0?'Lifetime':'until '+new Date(x).toLocaleString();
+(async()=>{const d=await(await fetch('/api/me')).json(),v=$('v');v.textContent='';
+ if(!d.user){v.append(el('p','mut','Log in with Discord to continue.'));const a=el('a','dc','Login with Discord');a.href='/auth/login';v.append(a);return}
+ const h=el('div','who');if(d.user.avatar){const i=el('img');i.src=d.user.avatar;i.width=i.height=36;h.append(i)}h.append(el('b',0,d.user.name));
+ const lo=el('button','b ghost','Logout');lo.onclick=async()=>{await post('/auth/logout');location.reload()};h.append(lo);v.append(h);
+ const has=Object.values(d.access).some(x=>x!==null);
+ if(has)[['online','Online Dice'],['offline','Offline Dice']].forEach(([k,n])=>{const x=d.access[k],a=el(x===null?'div':'a','card2'+(x===null?' lock':''),n+(x===null?' · locked':' · '+left(x)));if(x!==null)a.href='/app/'+k;v.append(a)});
+ if(d.admin){const a=el('a','btn','Admin panel');a.href='/admin';v.append(a)}
+ v.append(el('p','mut',has?'Redeem another key':'Enter your key to unlock the site.'));
+ const i=el('input');i.placeholder='HTP-XXXXX-XXXXX-XXXXX';i.autocomplete='off';const m=el('p','mut'),b=el('button','b','Redeem key');
+ b.onclick=async()=>{b.disabled=true;const r=await post('/api/redeem',{key:i.value});b.disabled=false;if(r.ok)location.reload();else m.textContent=r.error||'Failed'};
+ v.append(i,b,m);
+})();
+</script></body></html>

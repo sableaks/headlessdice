@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HEADLESS TP · Online Dice</title><link rel="stylesheet" href="/brand.css">
+<style>
+:root{--bg1:#f4f1ff;--bg2:#dff5ea;--fg:#1b1b24;--card:rgba(255,255,255,.78);--line:rgba(0,0,0,.1);--mut:#5d5d6b;--acc:#6b4cf0;--acc2:#1fa971;--die:#fff;--shadow:0 6px 20px rgba(0,0,0,.15)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#161326;--bg2:#0d2a22;--fg:#f0eefc;--card:rgba(255,255,255,.07);--line:rgba(255,255,255,.12);--mut:#a6a3bd;--acc:#8b73ff;--acc2:#35d49a;--shadow:0 6px 24px rgba(0,0,0,.5)}}
+:root[data-theme="dark"]{--bg1:#161326;--bg2:#0d2a22;--fg:#f0eefc;--card:rgba(255,255,255,.07);--line:rgba(255,255,255,.12);--mut:#a6a3bd;--acc:#8b73ff;--acc2:#35d49a;--shadow:0 6px 24px rgba(0,0,0,.5)}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--fg);background:linear-gradient(135deg,var(--bg1),var(--bg2)) fixed;font:16px/1.4 system-ui,-apple-system,Segoe UI,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:18px 14px 40px}
+h1{margin:6px 0 2px;font-size:28px;letter-spacing:-.5px}
+h1 span{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:14px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);margin:0 0 10px}
+.sub,.mut{color:var(--mut);font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:14px 0;box-shadow:var(--shadow);backdrop-filter:blur(8px)}
+textarea{width:100%;height:90px;resize:vertical;background:transparent;color:var(--fg);border:1px dashed var(--line);border-radius:12px;padding:10px;font:inherit}
+select,button{font:inherit;border-radius:12px;border:1px solid var(--line);padding:11px 16px;color:var(--fg);background:var(--card)}
+button{cursor:pointer;color:#fff;border:0;font-weight:700;background:linear-gradient(90deg,var(--acc),#a35cf0);transition:transform .15s,filter .15s}
+button:hover{filter:brightness(1.1);transform:translateY(-1px)}button:active{transform:scale(.97)}button:disabled{opacity:.6;cursor:wait}
+button.alt{background:linear-gradient(90deg,#1fa971,#2bc4a0)}
+/* dice */
+.die{width:var(--s);height:var(--s);background:var(--die);border-radius:calc(var(--s)*.2);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:calc(var(--s)*.15);gap:calc(var(--s)*.03);box-shadow:inset 0 -3px 0 rgba(0,0,0,.14),0 3px 8px rgba(0,0,0,.3);flex:none}
+.die i{background:radial-gradient(circle at 35% 30%,#fff8,transparent 40%),var(--c);border-radius:50%;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
+/* arena */
+.arena{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+#big{--c:#999;padding:22px;border-radius:30px;transition:box-shadow .4s;box-shadow:0 0 0 transparent}
+#big.land{box-shadow:0 0 60px var(--c);animation:pop .55s cubic-bezier(.3,1.6,.5,1)}
+#big.tumble{animation:tumble .45s linear infinite}
+@keyframes tumble{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-34px) rotate(100deg) scale(1.08)}50%{transform:translateY(0) rotate(200deg)}75%{transform:translateY(-14px) rotate(290deg) scale(1.04)}100%{transform:translateY(0) rotate(360deg)}}
+@keyframes pop{0%{transform:scale(.6) rotate(-20deg)}100%{transform:scale(1) rotate(0)}}
+.controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+#go{font-size:20px;padding:14px 28px}
+#res{opacity:0;transform:translateY(10px);transition:all .4s;min-height:92px}
+#res.show{opacity:1;transform:none}
+.hype{font-size:13px;font-weight:800;letter-spacing:2px;color:var(--acc2)}
+.call{font-size:34px;font-weight:900;letter-spacing:-1px}
+.track{position:relative;height:12px;border-radius:8px;background:var(--line);overflow:hidden;width:100%}
+.fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+#meter{width:0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;min-height:30px}
+.conf{position:fixed;left:50%;top:38%;width:9px;height:14px;border-radius:2px;pointer-events:none;z-index:9;animation:fly 1.3s ease-out forwards}
+@keyframes fly{to{transform:translate(var(--x),var(--y)) rotate(var(--r));opacity:0}}
+/* history / stats */
+.row{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:12px;background:var(--line);margin-bottom:6px;animation:in .4s both}
+.idx{width:26px;text-align:right;color:var(--mut);font-size:13px;margin-right:4px}
+@keyframes in{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+.srow{display:flex;align-items:center;gap:10px;margin:7px 0}.srow .track{flex:1}.srow span{width:70px;font-size:13px;color:var(--mut);text-align:right}
+.fill{transition:width .6s}
+.bt{display:grid;grid-template-columns:150px 1fr 90px;gap:10px;align-items:center;margin:9px 0;font-size:14px}
+.bt .track{height:16px;background:var(--line)}
+.band{position:absolute;top:0;bottom:0;background:rgba(120,120,255,.28)}
+.mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--fg);z-index:2}
+.val{position:absolute;top:3px;bottom:3px;left:0;border-radius:6px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .8s}
+@media (max-width:520px){.bt{grid-template-columns:1fr}.call{font-size:28px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+:root:root:root{--bg1:#12061f;--bg2:#2a0e52;--fg:#f3ecff;--card:rgba(255,255,255,.07);--line:rgba(255,255,255,.14);--mut:#b9a6d9;--acc:#a259ff;--acc2:#d36bff;--shadow:0 6px 24px rgba(0,0,0,.5)}
+button.alt{background:linear-gradient(90deg,#7b3cff,#c04bff)}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tabs{display:flex;gap:8px;margin-bottom:10px}.tab{background:var(--line);flex:1}.tab.on{background:linear-gradient(90deg,#7b3cff,#c04bff)}
+.slot{cursor:pointer}.die.empty{background:transparent;border:2px dashed var(--line);box-shadow:none}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;z-index:20}.sheet.open{display:flex}
+.sh{width:100%;background:#1c0b33;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(3,1fr);gap:10px;animation:up .25s}
+@keyframes up{from{transform:translateY(100%)}}.swb{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--line);padding:12px 6px;font-size:13px}
+</style></head><body><div class="wrap">
+<div class="top"><div class="logo">HEADLESS <span>TP</span></div><div style="display:flex;gap:8px;align-items:center"><a class="dc" href="https://discord.gg/headlesstp" target="_blank" rel="noopener">Discord</a><a href="/" class="mut">Home</a></div></div><h1>Online Dice Guesser</h1>
+<div class="sub">Your gut feeling, with a bit more sparkle.</div>
+
+<div class="card arena">
+  <div id="big"></div>
+  <div class="controls">
+    <select id="m">
+      <option value="w">Gut: WINNER WINNER CHICKEN DINNER</option>
+      <option value="r">Gut: random</option>
+      <option value="h">Gut: hot (most seen lately)</option>
+      <option value="c">Gut: cold (overdue)</option>
+    </select>
+    <button id="go" onclick="guess()">🎲 Roll my gut</button>
+  </div>
+  <div id="res">
+    <div class="hype" id="hype"></div>
+    <div class="call" id="call"></div>
+    <div class="mut">Win chance for this call: <b id="pct">51.8%</b> (if the site is fair)</div>
+    <div class="track" style="margin-top:8px"><div class="fill" id="meter"></div></div>
+  </div>
+  <div class="chips" id="chips"></div>
+</div>
+
+<div class="card">
+  <h2>History <span id="count" class="mut" style="text-transform:none;letter-spacing:0"></span></h2>
+  <div class="tabs"><button id="t1" class="tab on" onclick="mode('p')">Paste HTML</button><button id="t2" class="tab" onclick="mode('m')">Enter manually</button></div><div id="paste"><textarea id="in" oninput="render()" placeholder="Paste the HTML of the rolls list here (see steps below). Newest roll counts as roll 1."></textarea>
+  <div class="mut" style="margin-top:6px">How to copy: on the verify page press Refresh, right-click the rolls list, choose Inspect, right-click the <code>&lt;div class="tabletop"&gt;</code> line, then Copy → Copy outerHTML. A plain Ctrl+A copy loses the colors.</div></div>
+  <div id="man" style="display:none"><div class="mut">Tap a die to pick its color. Roll 5 is the most recent. Leave dice empty if a roll had fewer.</div><div id="mrows" style="margin:10px 0"></div>
+  <button class="alt" onclick="addOlder()">+ Add older roll</button> <button onclick="clearMan()" style="background:var(--line)">Clear</button></div>
+  <div id="sheet" class="sheet" onclick="closeSheet()"><div id="sw" class="sh" onclick="event.stopPropagation()"></div></div>
+  <div id="hist" style="margin-top:10px"></div>
+  <h2 style="margin-top:14px">Color counts (just a tally)</h2>
+  <div id="stats"></div>
+</div>
+
+<div class="card">
+  <h2>Backtest: do the gut modes beat chance?</h2>
+  <button class="alt" onclick="backtest()">Run backtest</button>
+  <div id="bt" style="margin-top:12px"></div>
+</div>
+<div class="card">
+  <h2>Forward test: does one color really win more?</h2>
+  <div class="mut">Pick a color, lock it in, then keep playing on the site. Re-paste later: only rolls after the lock are counted, so no cherry-picking. Works with pasted history.</div>
+  <div class="controls" style="justify-content:flex-start;margin:10px 0">
+    <select id="fc"></select>
+    <button class="alt" onclick="lockIn()">Lock it in</button>
+    <button onclick="checkFwd()">Check results</button>
+  </div>
+  <div id="fw"></div>
+</div>
+<div style="text-align:center;margin:10px"><a class="dc" href="https://discord.gg/headlesstp" target="_blank" rel="noopener">Join the Discord</a></div><p class="mut" style="text-align:center">If the site’s generator is fair, every color wins about 51.8% of the time (1 − (5/6)⁴). The forward test above is how you find out if it isn’t.<br>For entertainment only. Nothing here predicts rolls or guarantees wins. 18+; never bet more than you can afford to lose.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const C=['red','green','blue','darkorange','purple','gold'];
+const HEX={red:'#e5322d',green:'#1fae55',blue:'#2f6cf0',darkorange:'#ff8a00',purple:'#a23fd1',gold:'#ffc400'};
+const LBL={red:'Red',darkorange:'Orange',gold:'Yellow',green:'Green',blue:'Blue',purple:'Purple'};const nm=k=>LBL[k].toUpperCase();
+const PIPS=[[4],[0,8],[0,4,8],[0,2,6,8],[0,2,4,6,8],[0,2,3,5,6,8]];
+const BASE=1-Math.pow(5/6,4);
+function die(k,s){const p=PIPS[C.indexOf(k)];let h='';for(let i=0;i<9;i++)h+=p.includes(i)?'<i></i>':'<b></b>';return `<div class="die" style="--c:${HEX[k]};--s:${s}px">${h}</div>`}
+function parse(t){
+  const col=p=>[...p.matchAll(/color:\s*(red|green|blue|darkorange|purple|gold)\s*!important/gi)].map(x=>x[1].toLowerCase());
+  const parts=t.split(/width:25px[^>]*>\s*\d+\.\s*<\/div>/i).slice(1);
+  let r=parts.map(col).filter(x=>x.length);
+  if(!r.length){const m=col(t);for(let i=0;i+3<m.length;i+=4)r.push(m.slice(i,i+4))}
+  return r.reverse();
+}
+function cnt(h){const c=Object.fromEntries(C.map(k=>[k,0]));h.flat().forEach(k=>c[k]++);return c}
+function render(){
+  const rolls=getR();
+  const raw=$('in').value.trim();
+  $('count').textContent=rolls.length?'· '+rolls.length+' rolls loaded':(raw?'· no dice colors found, copy it as HTML (steps below)':'· nothing loaded yet');
+  $('hist').innerHTML=[...rolls].reverse().slice(0,10).map((r,i)=>`<div class="row" style="animation-delay:${i*45}ms"><span class="idx">${i+1}.</span>${r.map(k=>die(k,34)).join('')}</div>`).join('');
+  const c=cnt(rolls),tot=rolls.length*4||1;
+  $('stats').innerHTML=C.map(k=>{const p=c[k]/tot*100;return `<div class="srow">${die(k,26)}<div class="track"><div class="fill" style="width:${Math.min(100,p*3)}%;background:${HEX[k]}"></div></div><span>${c[k]} · ${p.toFixed(0)}%</span></div>`}).join('');
+}
+function setBig(k){$('big').innerHTML=die(k,130);$('big').style.setProperty('--c',HEX[k])}
+function pick(){
+  const rolls=getR(),m=$('m').value;
+  if(m==='r'||m==='w'||rolls.length<5)return C[Math.random()*6|0];
+  const c=cnt(m==='h'?rolls.slice(-20):rolls),v=C.map(k=>c[k]),best=m==='h'?Math.max(...v):Math.min(...v);
+  const t=C.filter(k=>c[k]===best);return t[Math.random()*t.length|0];
+}
+const HYPE=['WINNER WINNER CHICKEN DINNER','THE GUT HAS SPOKEN','DINNER IS SERVED','TRUST THE VIBES','LOCKED IN'];
+let busy=false,n=0,log=[];
+function guess(){
+  if(busy)return;busy=true;
+  const big=$('big'),btn=$('go'),final=pick(),quick=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  btn.disabled=true;$('res').classList.remove('show');$('meter').style.width='0';
+  big.classList.remove('land');big.classList.add('tumble');
+  const iv=setInterval(()=>setBig(C[Math.random()*6|0]),85);
+  setTimeout(()=>{
+    clearInterval(iv);big.classList.remove('tumble');setBig(final);void big.offsetWidth;big.classList.add('land');
+    n++;log.unshift(final);
+    $('hype').textContent='🍗 '+(($('m').value==='w')?HYPE[Math.random()*HYPE.length|0]:'GUESS #'+n);
+    $('call').innerHTML='Call <span style="color:'+HEX[final]+'">'+nm(final)+'</span>';
+    $('pct').textContent=(BASE*100).toFixed(1)+'%';
+    $('res').classList.add('show');setTimeout(()=>$('meter').style.width=(BASE*100)+'%',60);
+    $('chips').innerHTML=log.slice(0,12).map(k=>die(k,28)).join('');
+    confetti(final);btn.disabled=false;busy=false;
+  },quick?150:1500);
+}
+function confetti(k){
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const cols=[HEX[k],HEX[k],'#fff',...Object.values(HEX)];
+  for(let i=0;i<40;i++){const e=document.createElement('span');e.className='conf';
+    e.style.background=cols[Math.random()*cols.length|0];
+    e.style.setProperty('--x',(Math.random()*500-250)+'px');
+    e.style.setProperty('--y',(Math.random()*400-140)+'px');
+    e.style.setProperty('--r',(Math.random()*900-450)+'deg');
+    document.body.appendChild(e);setTimeout(()=>e.remove(),1400);}
+}
+const hot=h=>{const c=cnt(h);return C.reduce((a,b)=>c[b]>c[a]?b:a)};
+const S={
+  'Hot (all history)':h=>hot(h),
+  'Hot (last 20 rolls)':h=>hot(h.slice(-20)),
+  'Cold (overdue)':h=>{const c=cnt(h);return C.reduce((a,b)=>c[b]<c[a]?b:a)},
+  'Repeat last roll’s 1st':h=>h[h.length-1][0],
+  'Random (chicken dinner)':h=>C[Math.random()*6|0]
+};
+function backtest(){
+  const rolls=getR(),o=$('bt');
+  if(rolls.length<30){o.innerHTML='<div class="mut">Found '+rolls.length+' rolls. Paste at least 30 first (a few hundred is far better).</div>';return}
+  const start=10,N=rolls.length-start,ps=rolls.slice(start).map(r=>1-Math.pow(5/6,r.length));
+  const base=ps.reduce((a,b)=>a+b,0)/N,se=Math.sqrt(ps.reduce((a,p)=>a+p*(1-p),0))/N,lo=Math.max(0,base-2*se),hi=Math.min(1,base+2*se);
+  let out=0,h='';
+  for(const[name,f]of Object.entries(S)){
+    let w=0;for(let i=start;i<rolls.length;i++)if(rolls[i].includes(f(rolls.slice(0,i))))w++;
+    const r=w/N,z=Math.abs(r-base)>2*se;if(z)out++;
+    h+=`<div class="bt"><div>${name}</div><div class="track"><div class="band" style="left:${lo*100}%;width:${(hi-lo)*100}%"></div><div class="mark" style="left:${base*100}%"></div><div class="val" style="width:${r*100}%"></div></div><div>${(r*100).toFixed(0)}% ${z?'⚠️':'✓'}</div></div>`;
+  }
+  h+=`<div class="mut">Line = ${(base*100).toFixed(1)}% baseline (what any color wins). Shaded = normal luck range (±${(2*se*100).toFixed(0)}%) over ${N} tests. `+
+   (N<100?'Too few rolls for a real verdict.':out===0?'Every mode is within luck of the baseline: there is nothing in the history to exploit.':'With 5 modes tested, one or two landing outside by luck is normal. Re-test on a fresh game ID before believing it.')+'</div>';
+  o.innerHTML=h;
+}
+let MODE='p',M=Array.from({length:5},()=>[null,null,null,null]),SEL=null;
+function getR(){return MODE==='m'?M.map(r=>r.filter(Boolean)).filter(r=>r.length):parse($('in').value)}
+function mode(m){MODE=m;$('paste').style.display=m==='p'?'':'none';$('man').style.display=m==='m'?'':'none';$('t1').classList.toggle('on',m==='p');$('t2').classList.toggle('on',m==='m');render()}
+function drawMan(){$('mrows').innerHTML=M.map((r,i)=>`<div class="row"><span class="idx">${i+1}.</span>${r.map((k,j)=>`<div class="slot" onclick="pickDie(${i},${j})">${k?die(k,44):'<div class="die empty" style="--s:44px"></div>'}</div>`).join('')}${i===M.length-1?'<span class="mut">latest</span>':''}</div>`).join('')}
+function pickDie(i,j){SEL=[i,j];$('sw').innerHTML=C.map(k=>`<button class="swb" onclick="setDie('${k}')">${die(k,44)}<span>${LBL[k]}</span></button>`).join('')+'<button class="swb" onclick="setDie(null)" style="grid-column:1/-1">Clear this die</button>';$('sheet').classList.add('open')}
+function setDie(k){M[SEL[0]][SEL[1]]=k;closeSheet();drawMan();render()}
+function closeSheet(){$('sheet').classList.remove('open')}
+function addOlder(){M.unshift([null,null,null,null]);drawMan()}
+function clearMan(){M=Array.from({length:5},()=>[null,null,null,null]);drawMan();render()}
+let LK=null;try{LK=JSON.parse(localStorage.getItem('fwd')||'null')}catch(e){}
+function initFc(){
+  $('fc').innerHTML=C.map(k=>`<option value="${k}">${nm(k)}</option>`).join('');$('fc').value=LK?LK.c:'darkorange';
+  if(LK)$('fw').innerHTML='<div class="mut">Locked '+nm(LK.c)+' at '+LK.n+' rolls. Paste the fresh list and press Check results.</div>';
+}
+function lockIn(){
+  const n=getR().length;
+  if(!n){$('fw').innerHTML='<div class="mut">Paste your history first.</div>';return}
+  LK={c:$('fc').value,n};try{localStorage.setItem('fwd',JSON.stringify(LK))}catch(e){}
+  $('fw').innerHTML='<div class="mut">Locked '+nm(LK.c)+' at '+n+' rolls. Play on the site, paste the fresh list, press Check results.</div>';
+}
+function checkFwd(){
+  const o=$('fw');if(!LK){o.innerHTML='<div class="mut">Nothing locked yet.</div>';return}
+  const rolls=getR();
+  if(rolls.length<=LK.n){o.innerHTML='<div class="mut">No new rolls after the lock yet (list has '+rolls.length+', locked at '+LK.n+'). If the site trims old rolls, re-lock.</div>';return}
+  const f=rolls.slice(LK.n),N=f.length,w=f.filter(r=>r.includes(LK.c)).length;
+  const ps=f.map(r=>1-Math.pow(5/6,r.length)),base=ps.reduce((a,b)=>a+b,0)/N,se=Math.sqrt(ps.reduce((a,p)=>a+p*(1-p),0))/N,r=w/N;
+  const v=N<60?'Too early to say. Aim for 100+ fresh rolls, ideally across more than one game ID.':(r-base>2*se?'Above the luck range. Looks like a real edge, so keep tracking.':(Math.abs(r-base)<=2*se?'Within luck of a fair game. No edge shown.':'Below the luck range.'));
+  o.innerHTML='<div class="card" style="margin:0"><b>'+nm(LK.c)+'</b>: won '+w+'/'+N+' fresh rolls ('+(r*100).toFixed(0)+'%)<br><span class="mut">Fair-game expectation '+(base*100).toFixed(1)+'% (luck range ±'+(2*se*100).toFixed(0)+'%)</span><div class="track" style="margin-top:8px"><div class="band" style="left:'+Math.max(0,base-2*se)*100+'%;width:'+(Math.min(1,base+2*se)-Math.max(0,base-2*se))*100+'%"></div><div class="mark" style="left:'+base*100+'%"></div><div class="val" style="width:'+r*100+'%"></div></div><div style="margin-top:8px">'+v+'</div></div>';
+}
+setBig('gold');render();initFc();drawMan();
+</script></body></html>
