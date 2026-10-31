@@ -4,7 +4,10 @@
   ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "public/**|protected/**|*.html|*.css"
+      "includeFiles": [
+        "public/**",
+        "protected/**"
+      ]
     }
   }
 }
