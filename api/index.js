@@ -43,7 +43,7 @@ const CSP="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'sel
 const send=(r,c,b,t='text/plain',h={})=>{r.writeHead(c,{'Content-Type':t+'; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'same-origin','Content-Security-Policy':CSP,...h});r.end(b)};
 const json=(r,c,o)=>send(r,c,JSON.stringify(o),'application/json');
 const go=(r,u,h={})=>{r.writeHead(302,{Location:u,'Cache-Control':'no-store',...h});r.end()};
-const file=f=>fs.readFileSync(path.join(__dirname, '..', f));
+const file=f=>fs.readFileSync(path.join(__dirname, '../', f));
 const page=(r,f)=>send(r,200,file(f),'text/html');
 const nf=r=>send(r,404,'Not found');
 
