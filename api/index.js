@@ -62,6 +62,7 @@ module.exports = async (q, r) => {
     if(m==='GET'){
      if(p==='/')return page(r,'public/landing.html');
      if(p==='/brand.css')return send(r,200,file('public/brand.css'),'text/css');
+     if(p==='/favicon.ico'){r.writeHead(200,{'Content-Type':'image/x-icon','Cache-Control':'public, max-age=86400'});return r.end(file('public/favicon.ico'))}
      if(p==='/admin')return admin?page(r,'protected/admin.html'):nf(r);
      const a=p.match(/^\/app\/(online|offline)$/);
      if(a)return can(a[1])?page(r,'protected/'+a[1]+'.html'):go(r,'/');
